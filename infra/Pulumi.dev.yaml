@@ -1,0 +1,9 @@
+config:
+  aws:region: us-east-1
+
+  project:domainProperties:
+    bucketName: 'dev-elizn-nlu.qb-rasa-be.buzz'
+    domainName: 'qb-rasa-be.buzz'
+    domainNamePrefix: 'dev-elizn-nlu.qb-rasa-be.buzz'
+    hostedZoneId: '1122'
+    acmCertificateArn: 'arn:aws:acm:us-east-1:471391780895:certificate/2bae5e5b-56f5-4ab2-b87c-b00254d53457'

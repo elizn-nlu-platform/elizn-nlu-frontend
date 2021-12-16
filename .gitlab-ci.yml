@@ -1,0 +1,47 @@
+default:
+  image: quebicdocker/aws-pulumi:latest
+
+stages:
+  - infra_deploy
+  - web_deploy
+
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+    - node_modules/
+
+dev_infra_deploy:
+  stage: infra_deploy
+  # when: manual
+  script:
+    - cd infra
+    - npm install
+    - pulumi login
+    - pulumi stack select ${DEPLOY_ENV}
+    - pulumi config set-all --plaintext aws:region=$AWS_DEFAULT_REGION
+    - pulumi config set --path 'aws:allowedAccountIds[0]' $AWS_ACCOUNT_ID
+    - pulumi up --yes
+  environment: 
+    name: dev
+  variables:
+    DEPLOY_ENV: "dev"
+    AWS_DEFAULT_REGION: "us-east-1"
+    AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    PULUMI_ACCESS_TOKEN: $PULUMI_ACCESS_TOKEN
+  resource_group: $CI_COMMIT_REF_NAME
+
+dev_web_deploy:
+  stage: web_deploy
+  when: manual
+  script: 
+    - npm install
+    - aws s3 cp dist/ s3://$S3_BUCKET_NAME/ --recursive --include "*"
+    - aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+  environment: 
+    name: dev
+  variables:
+    S3_BUCKET_NAME: $S3_BUCKET_NAME
+    DISTRIBUTION_ID: $DISTRIBUTION_ID
+  resource_group: $CI_COMMIT_REF_NAME
